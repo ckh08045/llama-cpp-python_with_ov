@@ -35,6 +35,9 @@ jobs:
     - name: Clone llama-cpp-python
       run: |
         git clone --recursive https://github.com/JamePeng/llama-cpp-python.git
+        cd llama-cpp-python
+        # 내부의 llama.cpp 코드를 ggml-org의 최신 마스터 브랜치로 강제 업데이트
+        git submodule update --remote vendor/llama.cpp
 
     - name: Build Python Wheel
       run: |
