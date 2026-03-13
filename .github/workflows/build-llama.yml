@@ -34,8 +34,8 @@ jobs:
 
     - name: Clone llama-cpp-python
       run: |
-        git clone --recursive https://github.com/abetlen/llama-cpp-python.git
-      
+        git clone --recursive https://github.com/JamePeng/llama-cpp-python.git
+
     - name: Build Python Wheel
       run: |
         cd llama-cpp-python
