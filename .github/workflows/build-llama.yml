@@ -1,7 +1,7 @@
 name: Build llama-cpp-python (Windows)
 
 on:
-  workflow_dispatch: # GitHub 웹하드에서 수동으로 트리거할 수 있게 설정
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,17 +14,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11' # 3.10이 필요하다면 '3.10'으로 변경하세요.
+        python-version: '3.11'
 
     - name: Install Vulkan SDK
-          uses: jakoch/install-vulkan-sdk-action@v1
-          with:
-            vulkan_version: '1.3.296.0' # 안정적인 최신 버전으로 지정
-            cache: true
+      uses: jakoch/install-vulkan-sdk-action@v1
+      with:
+        vulkan_version: '1.3.296.0'
+        cache: true
 
     - name: Install OpenBLAS via vcpkg
       run: |
-        # GitHub Actions의 windows-latest 러너에는 vcpkg가 기본 설치되어 있습니다.
         vcpkg install openblas:x64-windows
         vcpkg integrate install
 
@@ -40,12 +39,8 @@ jobs:
     - name: Build Python Wheel
       run: |
         cd llama-cpp-python
-        
-        # vcpkg 경로와 CMake 빌드 플래그를 환경 변수로 설정합니다.
         $env:CMAKE_ARGS="-DLLAMA_VULKAN=ON -DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         $env:FORCE_CMAKE="1"
-        
-        # Wheel 패키지 빌드
         python -m build --wheel
 
     - name: Upload Artifact
