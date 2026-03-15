@@ -1,0 +1,69 @@
+name: Build llama-cpp-python (Linux)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   # Linux Mint 22와 호환 (Ubuntu 24.04 기반)
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies (OpenBLAS + Vulkan basics)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libopenblas-dev \
+          libvulkan-dev \
+          vulkan-validationlayers-dev \
+          pkg-config \
+          build-essential
+
+    - name: Install Vulkan SDK (optional but recommended for full headers)
+      uses: jakoch/install-vulkan-sdk-action@v1
+      with:
+        vulkan_version: '1.3.296.0'   # 필요 시 최신 버전으로 변경 (1.3.x 또는 1.4.x)
+        cache: true
+
+    - name: Install Python build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build wheel setuptools scikit-build-core cmake ninja
+
+    - name: Clone llama-cpp-python
+      run: |
+        git clone --recursive https://github.com/abetlen/llama-cpp-python.git
+        cd llama-cpp-python
+        # llama.cpp submodule을 최신으로 업데이트 (필요 시)
+        git submodule update --init --recursive
+        # 또는 ggml-org/llama.cpp 최신 마스터로 강제 업데이트 원할 때:
+        # cd vendor/llama.cpp
+        # git remote set-url origin https://github.com/ggml-org/llama.cpp.git
+        # git fetch origin
+        # git checkout master
+        # cd ../..
+
+    - name: Build Python Wheel (Vulkan + OpenBLAS)
+      run: |
+        cd llama-cpp-python
+        export GGML_VULKAN=ON
+        export GGML_BLAS=ON
+        export GGML_BLAS_VENDOR=OpenBLAS
+        # Vulkan SDK가 action으로 설치됐다면 자동으로 PATH에 들어감
+        # 필요 시 CMAKE_ARGS에 추가 경로 지정 가능
+        export CMAKE_ARGS="-DGGML_VULKAN=ON -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
+        export FORCE_CMAKE=1
+        python -m build --wheel
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: llama-cpp-python-wheel-linux
+        path: llama-cpp-python/dist/*.whl
