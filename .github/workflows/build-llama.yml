@@ -77,8 +77,8 @@ jobs:
           git checkout $ref
           cd ../..
         } else {
-          Write-Host "llama.cpp 최신 master로 업데이트"
-          git submodule update --remote vendor/llama.cpp
+          Write-Host "llama-cpp-python에 고정된 안정적인 서브모듈 커밋 유지"
+          git submodule update --init vendor/llama.cpp
         }
         # 실제 llama.cpp 커밋 확인
         cd vendor/llama.cpp
