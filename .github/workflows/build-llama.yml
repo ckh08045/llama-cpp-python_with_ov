@@ -102,6 +102,10 @@ jobs:
         if (-not $vulkanSdk) {
           $vulkanSdk = "C:/VulkanSDK/1.4.304.1"
         }
+
+        # CMake가 백슬래시를 삼키지 못하도록 슬래시로 일괄 치환
+        $vulkanSdk = $vulkanSdk -replace '\\', '/'
+        
         Write-Host "Vulkan SDK: $vulkanSdk"
 
         # vcpkg release 경로 명시 (debug/lib 대신 release lib 선택)
