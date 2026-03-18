@@ -45,7 +45,7 @@ jobs:
     # ── 6. 공식 llama-cpp-python 최신 버전 클론 (Qwen3.5 지원 필수) ────────
     - name: Clone official llama-cpp-python
       run: |
-        git clone --recursive https://github.com/abetlen/llama-cpp-python.git
+        git clone --recursive https://github.com/JamePeng/llama-cpp-python.git
         cd llama-cpp-python
         # 서브모듈(llama.cpp)을 현재 llama-cpp-python 버전에 맞게 초기화
         git submodule update --init --recursive vendor/llama.cpp
