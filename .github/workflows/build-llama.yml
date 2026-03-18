@@ -40,6 +40,11 @@ jobs:
         vcpkg install openblas:x64-windows
         vcpkg integrate install
 
+    # ── 4.5. pkg-config 설치 (ggml-blas CMakeLists.txt가 PkgConfig 필수 요구) ──
+    #   Windows GitHub Runner에 기본 미포함 → pkgconfiglite로 해결
+    - name: Install pkg-config (required by ggml-blas CMake)
+      run: choco install pkgconfiglite --yes
+
     # ── 5. Python 빌드 도구 ────────────────────────────────────────────────
     - name: Install Python build dependencies
       run: |
@@ -87,20 +92,35 @@ jobs:
     #     GGML_NATIVE=OFF          : 배포 범용성 (AVX2 고정 X)
     #     LLAMA_CURL=OFF           : Windows에서 curl 의존 빌드 오류 방지
     #     CMAKE_TOOLCHAIN_FILE     : vcpkg OpenBLAS 경로 자동 연결
+    #     CMAKE_PREFIX_PATH        : release lib 명시 (debug lib 선택 방지)
     - name: Build Python Wheel
       run: |
         cd llama-cpp-python
+
+        # Vulkan SDK 환경변수 (jakoch 액션이 설정했지만 명시적 보강)
+        $vulkanSdk = $env:VULKAN_SDK
+        if (-not $vulkanSdk) {
+          $vulkanSdk = "C:/VulkanSDK/1.4.304.1"
+        }
+        Write-Host "Vulkan SDK: $vulkanSdk"
+
+        # vcpkg release 경로 명시 (debug/lib 대신 release lib 선택)
+        $vcpkgRelease = "C:/vcpkg/installed/x64-windows"
+
         $env:CMAKE_ARGS = @(
           "-DGGML_VULKAN=ON",
           "-DGGML_BLAS=ON",
           "-DGGML_BLAS_VENDOR=OpenBLAS",
           "-DGGML_NATIVE=OFF",
           "-DLLAMA_CURL=OFF",
-          "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "-DCMAKE_PREFIX_PATH=$vcpkgRelease",
+          "-DVulkan_LIBRARY=$vulkanSdk/Lib/vulkan-1.lib",
+          "-DVulkan_INCLUDE_DIR=$vulkanSdk/Include"
         ) -join " "
         $env:FORCE_CMAKE = "1"
         Write-Host "CMAKE_ARGS: $env:CMAKE_ARGS"
-        python -m build --wheel --no-isolation
+        python -m build --wheel
 
     # ── 9. 빌드 결과 확인 ─────────────────────────────────────────────────
     - name: List built wheels
